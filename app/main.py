@@ -1,12 +1,15 @@
-"""FastAPI application for customer service with LLM integration.
+"""FastAPI application for customer service with multi-agent LLM integration.
 
 Production features:
+- Multi-agent orchestration: intent classification → specialized agent → tool augmentation
 - API key authentication (disabled when API_KEY env var is empty)
 - Per-IP rate limiting via slowapi
 - LLM call timeout with asyncio.wait_for + asyncio.to_thread
 - Prometheus metrics at /metrics
 - Structured JSON logging via structlog
 - Health check endpoint with live Ollama connectivity test
+- Conversation session management (in-memory, Redis-ready)
+- Human review queue for flagged/escalated conversations
 - Phoenix / OpenTelemetry tracing (optional)
 """
 
@@ -33,6 +36,7 @@ from app.config import (
     PHOENIX_ENABLED,
     PHOENIX_ENDPOINT,
     RATE_LIMIT_PER_MINUTE,
+    REVIEW_QUEUE_ENABLED,
     SYSTEM_PROMPT,
 )
 from app.guardrails import (
@@ -49,6 +53,9 @@ from app.metrics import (
     REQUEST_LATENCY,
 )
 from app.middleware.auth import verify_api_key
+from app.agents.orchestrator import CustomerServiceOrchestrator
+from app.state.session import get_session_store
+from app.queue.review_queue import get_review_queue
 
 # ---------------------------------------------------------------------------
 # Structured logging setup
@@ -89,7 +96,7 @@ logger = structlog.get_logger(__name__)
 # Phoenix tracing (optional)
 # ---------------------------------------------------------------------------
 tracer = None
-_phoenix_enabled = PHOENIX_ENABLED  # mutable local copy so we can disable on failure
+_phoenix_enabled = PHOENIX_ENABLED
 
 if _phoenix_enabled:
     try:
@@ -121,14 +128,13 @@ limiter = Limiter(key_func=get_remote_address)
 # ---------------------------------------------------------------------------
 app = FastAPI(
     title="Customer Service AI",
-    description="E-commerce customer service application with AI assistance",
-    version="1.0.0",
+    description="E-commerce customer service with multi-agent AI orchestration",
+    version="2.0.0",
 )
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Mount Prometheus metrics endpoint
 if METRICS_ENABLED:
     metrics_app = make_asgi_app()
     app.mount("/metrics", metrics_app)
@@ -144,50 +150,56 @@ llm = OllamaLLM(
     max_tokens=200,
 )
 
+# ---------------------------------------------------------------------------
+# Multi-agent system singletons
+# ---------------------------------------------------------------------------
+_session_store = get_session_store()
+_review_queue = get_review_queue()
+_orchestrator = CustomerServiceOrchestrator(
+    llm=llm,
+    session_store=_session_store,
+    review_queue=_review_queue,
+    tracer=tracer,
+)
+
 
 # ---------------------------------------------------------------------------
 # Request / Response models
 # ---------------------------------------------------------------------------
 class QueryRequest(BaseModel):
-    """Request model for customer queries."""
-
     question: str
     session_id: str | None = None
 
 
 class QueryResponse(BaseModel):
-    """Response model for customer queries."""
-
     answer: str
     blocked: bool = False
     reason: str = ""
     request_id: str = ""
+    intent: str = ""
+    agent_name: str = ""
+    tools_called: list[str] = []
+    needs_review: bool = False
+    session_id: str = ""
 
 
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
 
-
 @app.get("/")
 async def root() -> dict:
-    """Root endpoint — basic service information."""
     return {
         "status": "ok",
         "service": "Customer Service AI",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "env": APP_ENV,
     }
 
 
 @app.get("/health")
 async def health() -> dict:
-    """Health check endpoint.
-
-    Verifies that the Ollama backend is reachable.  Returns HTTP 200 in both
-    "ok" and "degraded" states so that load-balancer health checks can
-    distinguish connectivity issues from a crashed application.
-    """
+    """Health check with live Ollama connectivity probe."""
     ollama_status = "down"
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
@@ -197,12 +209,37 @@ async def health() -> dict:
     except Exception as exc:
         logger.warning("health_check_ollama_unreachable", error=str(exc))
 
-    overall = "ok" if ollama_status == "up" else "degraded"
+    session_count = await _session_store.session_count()
+    queue_size = await _review_queue.size()
+
     return {
-        "status": overall,
+        "status": "ok" if ollama_status == "up" else "degraded",
         "ollama": ollama_status,
         "model": LLM_MODEL,
+        "active_sessions": session_count,
+        "review_queue_depth": queue_size,
     }
+
+
+@app.get("/sessions/{session_id}")
+async def get_session(session_id: str, _auth: bool = Depends(verify_api_key)) -> dict:
+    """Return conversation history for a session."""
+    session = await _session_store.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return {
+        "session_id": session_id,
+        "turns": len(session.turns),
+        "history": [{"user": t.user, "assistant": t.assistant, "intent": t.intent} for t in session.turns],
+        "created_at": session.created_at,
+    }
+
+
+@app.get("/admin/review-queue")
+async def get_review_queue_items(_auth: bool = Depends(verify_api_key)) -> dict:
+    """Return pending review queue items (admin endpoint)."""
+    items = await _review_queue.list_pending(limit=50)
+    return {"queue_depth": await _review_queue.size(), "items": items}
 
 
 @app.post("/query", response_model=QueryResponse)
@@ -212,12 +249,13 @@ async def query(
     body: QueryRequest,
     _auth: bool = Depends(verify_api_key),
 ) -> QueryResponse:
-    """Process a customer service query through the 5-step guardrail pipeline."""
+    """Process a customer service query through the guardrail + multi-agent pipeline."""
     request_id = str(uuid.uuid4())
+    session_id = body.session_id or str(uuid.uuid4())
     start_time = time.perf_counter()
 
     ACTIVE_REQUESTS.inc()
-    log = logger.bind(request_id=request_id, session_id=body.session_id)
+    log = logger.bind(request_id=request_id, session_id=session_id)
     log.info("request_received", question_length=len(body.question))
 
     try:
@@ -226,22 +264,26 @@ async def query(
                 span.set_attribute("input.value", body.question)
                 span.set_attribute("input.length", len(body.question))
                 span.set_attribute("request_id", request_id)
-                response = await _process_query(body.question, span, request_id, log)
+                span.set_attribute("session_id", session_id)
+                response = await _process_query(body.question, session_id, request_id, span, log)
         else:
-            response = await _process_query(body.question, None, request_id, log)
+            response = await _process_query(body.question, session_id, request_id, None, log)
 
         response.request_id = request_id
+        response.session_id = session_id
 
         elapsed = time.perf_counter() - start_time
         REQUEST_LATENCY.observe(elapsed)
-
         status_label = "blocked" if response.blocked else "allowed"
         REQUEST_COUNT.labels(status=status_label).inc()
 
         log.info(
             "request_completed",
             blocked=response.blocked,
-            block_reason=response.reason if response.blocked else None,
+            intent=response.intent,
+            agent=response.agent_name,
+            tools_called=response.tools_called,
+            needs_review=response.needs_review,
             latency_seconds=round(elapsed, 4),
         )
 
@@ -263,34 +305,24 @@ async def query(
 
 
 # ---------------------------------------------------------------------------
-# Internal query processing
+# Internal pipeline
 # ---------------------------------------------------------------------------
-
 
 async def _process_query(
     question: str,
-    parent_span,
+    session_id: str,
     request_id: str,
+    parent_span,
     log,
 ) -> QueryResponse:
-    """Run the 5-step guardrail pipeline and return a QueryResponse."""
+    """5-step guardrail pipeline + multi-agent orchestration."""
 
-    def _span_attr(span, key: str, value) -> None:
+    def _span_attr(span, key, value):
         if span is not None:
             span.set_attribute(key, value)
 
-    # ------------------------------------------------------------------
     # Step 1: Input filtering
-    # ------------------------------------------------------------------
-    if _phoenix_enabled and tracer and parent_span:
-        with tracer.start_as_current_span("input_filtering") as span:
-            is_valid, filtered_or_reason = filter_input(question)
-            _span_attr(span, "guardrail.passed", is_valid)
-            if not is_valid:
-                _span_attr(span, "guardrail.reason", filtered_or_reason)
-    else:
-        is_valid, filtered_or_reason = filter_input(question)
-
+    is_valid, filtered_or_reason = filter_input(question)
     if not is_valid:
         log.warning("input_filtered", reason=filtered_or_reason)
         _span_attr(parent_span, "output.blocked", True)
@@ -300,23 +332,12 @@ async def _process_query(
             answer="",
             blocked=True,
             reason=f"Input validation failed: {filtered_or_reason}",
-            request_id=request_id,
         )
 
     filtered_question = filtered_or_reason
 
-    # ------------------------------------------------------------------
     # Step 2: Prompt injection detection
-    # ------------------------------------------------------------------
-    if _phoenix_enabled and tracer and parent_span:
-        with tracer.start_as_current_span("prompt_injection_detection") as span:
-            is_injection, injection_reason = detect_prompt_injection(filtered_question)
-            _span_attr(span, "guardrail.passed", not is_injection)
-            if is_injection:
-                _span_attr(span, "guardrail.reason", injection_reason)
-    else:
-        is_injection, injection_reason = detect_prompt_injection(filtered_question)
-
+    is_injection, injection_reason = detect_prompt_injection(filtered_question)
     if is_injection:
         log.warning("prompt_injection_detected", reason=injection_reason)
         _span_attr(parent_span, "output.blocked", True)
@@ -326,21 +347,10 @@ async def _process_query(
             answer="",
             blocked=True,
             reason="I cannot process this request. Reason: Prompt injection attempt detected.",
-            request_id=request_id,
         )
 
-    # ------------------------------------------------------------------
     # Step 3: Policy violation detection
-    # ------------------------------------------------------------------
-    if _phoenix_enabled and tracer and parent_span:
-        with tracer.start_as_current_span("policy_violation_detection") as span:
-            is_violation, violation_reason = detect_policy_violation(filtered_question)
-            _span_attr(span, "guardrail.passed", not is_violation)
-            if is_violation:
-                _span_attr(span, "guardrail.reason", violation_reason)
-    else:
-        is_violation, violation_reason = detect_policy_violation(filtered_question)
-
+    is_violation, violation_reason = detect_policy_violation(filtered_question)
     if is_violation:
         log.warning("policy_violation_detected", reason=violation_reason)
         _span_attr(parent_span, "output.blocked", True)
@@ -350,27 +360,17 @@ async def _process_query(
             answer="",
             blocked=True,
             reason=f"I cannot process this request. Reason: {violation_reason}",
-            request_id=request_id,
         )
 
-    # ------------------------------------------------------------------
-    # Step 4: Call LLM (with timeout)
-    # ------------------------------------------------------------------
-    full_prompt = f"{SYSTEM_PROMPT}\n\nCustomer: {filtered_question}\n\nAssistant:"
-
+    # Step 4: Multi-agent orchestration (intent → route → tool → LLM)
     llm_start = time.perf_counter()
     try:
-        if _phoenix_enabled and tracer and parent_span:
-            with tracer.start_as_current_span("llm_call"):
-                response_text = await asyncio.wait_for(
-                    asyncio.to_thread(llm.invoke, full_prompt),
-                    timeout=LLM_TIMEOUT_SECONDS,
-                )
-        else:
-            response_text = await asyncio.wait_for(
-                asyncio.to_thread(llm.invoke, full_prompt),
-                timeout=LLM_TIMEOUT_SECONDS,
-            )
+        orch_result = await _orchestrator.process(
+            query=filtered_question,
+            session_id=session_id,
+            request_id=request_id,
+        )
+        response_text = orch_result.response
     except (TimeoutError, asyncio.TimeoutError):
         llm_elapsed = time.perf_counter() - llm_start
         log.error("llm_timeout", timeout_seconds=LLM_TIMEOUT_SECONDS, elapsed=llm_elapsed)
@@ -386,29 +386,15 @@ async def _process_query(
         )
     except Exception as exc:
         log.error("llm_invocation_error", error=str(exc))
-        _span_attr(parent_span, "output.error", str(exc))
         raise HTTPException(
             status_code=500,
             detail="Failed to generate response. Please try again later.",
         )
     finally:
-        llm_elapsed = time.perf_counter() - llm_start
-        LLM_LATENCY.observe(llm_elapsed)
+        LLM_LATENCY.observe(time.perf_counter() - llm_start)
 
-    log.debug("llm_response_received", response_length=len(response_text))
-
-    # ------------------------------------------------------------------
     # Step 5: Output moderation
-    # ------------------------------------------------------------------
-    if _phoenix_enabled and tracer and parent_span:
-        with tracer.start_as_current_span("output_moderation") as span:
-            is_safe, safety_reason = moderate_output(response_text)
-            _span_attr(span, "guardrail.passed", is_safe)
-            if not is_safe:
-                _span_attr(span, "guardrail.reason", safety_reason)
-    else:
-        is_safe, safety_reason = moderate_output(response_text)
-
+    is_safe, safety_reason = moderate_output(response_text)
     if not is_safe:
         log.warning("output_moderation_blocked", reason=safety_reason)
         _span_attr(parent_span, "output.blocked", True)
@@ -418,25 +404,26 @@ async def _process_query(
             answer="",
             blocked=True,
             reason="I apologize, but I cannot provide this response due to safety concerns.",
-            request_id=request_id,
+            intent=orch_result.intent,
+            agent_name=orch_result.agent_name,
         )
 
-    # ------------------------------------------------------------------
-    # Success
-    # ------------------------------------------------------------------
     _span_attr(parent_span, "output.blocked", False)
-    _span_attr(parent_span, "output.value", response_text.strip())
-    _span_attr(parent_span, "output.length", len(response_text))
+    _span_attr(parent_span, "output.intent", orch_result.intent)
+    _span_attr(parent_span, "output.agent", orch_result.agent_name)
+    _span_attr(parent_span, "output.tools_called", str(orch_result.tools_called))
 
     return QueryResponse(
-        answer=response_text.strip(),
+        answer=response_text,
         blocked=False,
         reason="",
-        request_id=request_id,
+        intent=orch_result.intent,
+        agent_name=orch_result.agent_name,
+        tools_called=orch_result.tools_called,
+        needs_review=orch_result.needs_review,
     )
 
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8000)

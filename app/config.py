@@ -57,6 +57,19 @@ APP_ENV = os.getenv("APP_ENV", "development")
 METRICS_ENABLED = os.getenv("METRICS_ENABLED", "true").lower() == "true"
 
 # ---------------------------------------------------------------------------
+# Redis (session state + future rate-limit store)
+# ---------------------------------------------------------------------------
+# Empty string → use in-memory fallback (single-instance dev mode).
+REDIS_URL = os.getenv("REDIS_URL", "")
+
+# ---------------------------------------------------------------------------
+# Multi-agent system
+# ---------------------------------------------------------------------------
+REVIEW_QUEUE_ENABLED = os.getenv("REVIEW_QUEUE_ENABLED", "true").lower() == "true"
+SESSION_MAX_TURNS = int(os.getenv("SESSION_MAX_TURNS", "10"))
+SESSION_TTL_HOURS = int(os.getenv("SESSION_TTL_HOURS", "24"))
+
+# ---------------------------------------------------------------------------
 # Phoenix observability settings
 # ---------------------------------------------------------------------------
 PHOENIX_ENDPOINT = os.getenv("PHOENIX_ENDPOINT", "http://localhost:6006")

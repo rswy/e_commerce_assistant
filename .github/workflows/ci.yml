@@ -174,6 +174,59 @@ jobs:
           path: /tmp/eval_results.json
 
   # ---------------------------------------------------------------------------
+  # LLM-as-judge evaluation
+  # ---------------------------------------------------------------------------
+  llm-evaluate:
+    name: LLM-as-judge evaluation (sample)
+    runs-on: ubuntu-latest
+    needs: evaluate
+    # Only run when ANTHROPIC_API_KEY is available (set as repo secret)
+    if: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -e .
+          pip install anthropic
+      - name: Run LLM-as-judge on sample responses
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python -c "
+          from evaluation.llm_evaluator import LLMEvaluator
+          evaluator = LLMEvaluator()
+
+          # Sample evaluations
+          samples = [
+            {'question': 'Where is my order ORD-10001?', 'response': 'Your order ORD-10001 was shipped on May 15th via UPS with tracking number 1Z999AA10123456784. Expected delivery is May 22nd.', 'intent': 'order_status'},
+            {'question': 'Can I return my damaged headphones?', 'response': 'I am sorry to hear your headphones arrived damaged. Your order is within our 30-day return window. Please visit returns.example.com and enter your order number to start the return process.', 'intent': 'return_request'},
+            {'question': 'How much do the wireless headphones cost?', 'response': 'The Wireless Headphones Pro (ID: P001) are priced at \$79.99 and are currently in stock. They feature 30-hour battery life and Bluetooth 5.0.', 'intent': 'product_question'},
+          ]
+
+          results = evaluator.evaluate_batch(samples)
+          print('LLM Judge Results:')
+          for s, r in zip(samples, results):
+            print(f'  Intent={s[\"intent\"]}: overall={r.overall:.2f} (acc={r.accuracy:.2f} help={r.helpfulness:.2f} tone={r.tone:.2f})')
+
+          avg_overall = sum(r.overall for r in results) / len(results)
+          print(f'Average overall score: {avg_overall:.3f}')
+          if avg_overall < 0.60:
+            print('WARNING: Average LLM judge score below 0.60')
+            exit(1)
+          "
+      - name: Upload LLM evaluation results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: llm-evaluation-results
+          path: /tmp/llm_eval_results.json
+
+  # ---------------------------------------------------------------------------
   # Docker build
   # ---------------------------------------------------------------------------
   docker-build:
@@ -202,8 +255,8 @@ jobs:
   deploy-staging:
     name: Deploy to staging
     runs-on: ubuntu-latest
-    needs: [docker-build, evaluate]
-    if: github.ref == 'refs/heads/main'
+    needs: [docker-build, evaluate, llm-evaluate]
+    if: github.ref == 'refs/heads/main' && (needs.llm-evaluate.result == 'success' || needs.llm-evaluate.result == 'skipped')
     environment: staging
 
     steps:
