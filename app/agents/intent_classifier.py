@@ -22,8 +22,11 @@ class IntentClassifier:
     _INTENT_KEYWORDS: dict[Intent, list[str]] = {
         Intent.ESCALATION: [
             "speak to a manager", "speak to manager", "supervisor", "escalate",
-            "this is unacceptable", "legal action", "complaint", "disgusted",
-            "furious", "terrible service", "worst", "i want to speak",
+            "this is unacceptable", "completely unacceptable", "unacceptable",
+            "legal action", "complaint", "disgusted", "furious", "terrible service",
+            "worst", "i want to speak", "want a manager", "need a manager",
+            "get a manager", "talk to a manager", "speak with a manager",
+            "i want to escalate", "not acceptable", "this is ridiculous",
         ],
         Intent.RETURN_REQUEST: [
             "return", "refund", "exchange", "send back", "damaged", "broken",
@@ -70,6 +73,10 @@ class IntentClassifier:
             return ClassificationResult(intent=Intent.ORDER_STATUS, confidence=0.6, entities=entities)
 
         return ClassificationResult(intent=Intent.GENERAL, confidence=0.5, entities=entities)
+
+    def extract_entities(self, text: str) -> dict:
+        """Public wrapper for entity extraction (used by orchestrator and router)."""
+        return self._extract_entities(text)
 
     def _extract_entities(self, text: str) -> dict:
         entities: dict = {}

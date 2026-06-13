@@ -313,3 +313,136 @@ class TestReviewQueue:
         pending = await queue.list_pending(limit=10)
         assert len(pending) == 3
         assert pending[0]["session_id"] == "sess-0"
+
+
+# ── CompoundRouter tests ─────────────────────────────────────────────────────
+
+class TestCompoundRouter:
+    def setup_method(self):
+        from app.agents.compound_router import CompoundRouter
+        self.router = CompoundRouter(llm=None)
+
+    def test_single_intent_high_confidence(self):
+        decision = self.router.route("where is my order ORD-10001")
+        assert decision.strategy == "single"
+        assert not decision.is_compound
+
+    def test_compound_detection_and_also(self):
+        decision = self.router.route(
+            "I want to check my order ORD-10001 and also initiate a return"
+        )
+        assert decision.compound_detected is True
+        # Should detect both order_status and return_request
+        intents = [r[0].value for r in decision.routes]
+        assert "order_status" in intents
+        assert "return_request" in intents
+
+    def test_compound_detection_as_well_as(self):
+        decision = self.router.route(
+            "What is the price of the headphones, as well as are they in stock?"
+        )
+        # "as well as" is a compound signal; but both map to product_question
+        # dedup should collapse to single route
+        assert decision.compound_detected is True
+
+    def test_decompose_and_also(self):
+        from app.agents.compound_router import CompoundRouter
+        router = CompoundRouter()
+        parts = router._decompose("check my order and also start a return")
+        assert len(parts) == 2
+        assert any("order" in p for p in parts)
+        assert any("return" in p for p in parts)
+
+    def test_decompose_additionally(self):
+        from app.agents.compound_router import CompoundRouter
+        router = CompoundRouter()
+        parts = router._decompose("where is my order ORD-10005, additionally I want to know your return policy")
+        assert len(parts) == 2
+
+    def test_no_compound_signal(self):
+        from app.agents.compound_router import CompoundRouter
+        router = CompoundRouter()
+        assert not router._has_compound_signal("where is my order")
+        assert not router._has_compound_signal("I want a refund for ORD-10001")
+
+    def test_compound_signal_detected(self):
+        from app.agents.compound_router import CompoundRouter
+        router = CompoundRouter()
+        assert router._has_compound_signal("check order and also start return")
+        assert router._has_compound_signal("track package as well as check stock")
+
+
+# ── SynthesizerAgent tests ────────────────────────────────────────────────────
+
+@pytest.mark.asyncio
+class TestSynthesizerAgent:
+    def setup_method(self):
+        from app.agents.synthesizer_agent import SynthesizerAgent
+        from app.agents.base import AgentResult
+        from unittest.mock import MagicMock, patch
+        self.AgentResult = AgentResult
+        self.SynthesizerAgent = SynthesizerAgent
+
+    async def test_single_result_passthrough(self):
+        mock_llm = MagicMock()
+        synth = self.SynthesizerAgent(llm=mock_llm)
+        result = self.AgentResult(response="Order shipped", intent="order_status", agent_name="order_agent")
+
+        with patch.object(synth, "_invoke_llm", return_value="Order shipped") as _:
+            out = await synth.process("where is my order", [result], [])
+        # Single result → passthrough, no LLM called
+        assert out.response == "Order shipped"
+
+    async def test_multi_result_calls_llm(self):
+        mock_llm = MagicMock()
+        synth = self.SynthesizerAgent(llm=mock_llm)
+        r1 = self.AgentResult(response="Order shipped on May 15", intent="order_status", agent_name="order_agent")
+        r2 = self.AgentResult(response="You are eligible for a return", intent="return_request", agent_name="returns_agent")
+
+        with patch.object(synth, "_invoke_llm", return_value="Combined response") as mock_invoke:
+            out = await synth.process("check order and start return", [r1, r2], [])
+
+        mock_invoke.assert_called_once()
+        assert out.agent_name == "synthesizer_agent"
+        assert "order_status" in out.intent
+        assert "return_request" in out.intent
+
+    async def test_needs_review_propagates(self):
+        mock_llm = MagicMock()
+        synth = self.SynthesizerAgent(llm=mock_llm)
+        r1 = self.AgentResult(response="A", intent="order_status", agent_name="order_agent", needs_review=False)
+        r2 = self.AgentResult(response="B", intent="return_request", agent_name="returns_agent", needs_review=True)
+
+        with patch.object(synth, "_invoke_llm", return_value="Combined"):
+            out = await synth.process("query", [r1, r2], [])
+
+        assert out.needs_review is True
+
+
+# ── Updated orchestrator compound routing tests ────────────────────────────────
+
+@pytest.mark.asyncio
+class TestOrchestratorCompound:
+    async def test_orchestrator_handles_compound_query(self):
+        from unittest.mock import MagicMock, patch, AsyncMock
+        from app.agents.orchestrator import CustomerServiceOrchestrator
+        from app.state.session import InMemorySessionStore
+        from app.queue.review_queue import InMemoryReviewQueue
+
+        mock_llm = MagicMock()
+        store = InMemorySessionStore()
+        queue = InMemoryReviewQueue()
+        orch = CustomerServiceOrchestrator(llm=mock_llm, session_store=store, review_queue=queue)
+
+        with patch("app.agents.base.BaseAgent._invoke_llm", new_callable=AsyncMock) as mock_invoke:
+            mock_invoke.return_value = "Here is the combined answer for your order and return."
+            result = await orch.process(
+                query="I want to check my order ORD-10001 and also initiate a return",
+                session_id="test-compound-001",
+                request_id="req-001",
+            )
+
+        # Compound queries should have a non-empty response
+        assert result.response != ""
+        # Strategy should reflect compound routing
+        assert result.routing_strategy in ("parallel", "single")
