@@ -614,24 +614,27 @@ Use this if asked to walk through the code live.
 - Say: "Every request is logged as structured JSON with request_id. Every
   blocking event increments BLOCK_REASON_COUNT so you can alert on it."
 
-**Minute 7-8: Multi-agent system**
-- Show `app/agents/orchestrator.py` — the routing logic
-- Show `app/agents/intent_classifier.py` — keyword classification
+**Minute 7-8: Multi-agent system + compound routing**
+- Run the mock demo (no Ollama required): `python demos/mock_demo.py`
+- Walk through Scenario A (order status), F (compound query), G (injection blocked)
+- Show `app/agents/compound_router.py` — the three-phase cascade
+- Show `app/agents/orchestrator.py` — parallel dispatch + synthesis
 - Show `app/tools/orders.py` — deterministic tool lookup
-- Show `data/mock_orders.json` — the data it reads
-- Say: "The model only generates text. Routing and tool execution are
-  deterministic — this is what makes it reliable with a 135M model."
+- Say: "The model only generates text. Routing, tool execution, and compound
+  detection are deterministic — this is what makes it reliable with a 135M model."
 
-**Minute 9: Evaluation**
-- Show `evaluation/llm_evaluator.py` — the judge model
+**Minute 9: Evaluation + model experiments**
+- Run: `python experiments/compare_models.py`
+- Shows SmolLM2 vs Llama 3.2 3B vs Mistral 7B comparison table
+- Say: "Three models, same codebase, same guardrails. The model is a config variable."
 - Run: `python evaluation/run_llm_eval.py` (uses heuristic if no API key)
 - Show `.github/workflows/ci.yml` — the quality gate jobs
 
 **Minute 10: The Phoenix trace**
 - Show `app/agents/orchestrator.py` — the `tracer.start_as_current_span()` calls
-- Point out: orchestrator span → intent_classification span → agent:X span
-- Say: "With Phoenix running, you'd see this full hierarchy for every request.
-  The intent, the agent that handled it, the tools called — all visible."
+- Reference `docs/OBSERVABILITY_WALKTHROUGH.md` for the full trace hierarchy
+- Say: "For Scenario F (compound query), you'd see parallel agent spans in the
+  Phoenix timeline view — the system literally shows you the parallelism."
 
 ---
 
@@ -640,50 +643,47 @@ Use this if asked to walk through the code live.
 Print this and keep it on your desk during the interview.
 
 ```
-PROJECT:  Customer Service AI
-          MVP → Production (6 stages) → Multi-Agent (2 stages)
+PROJECT:  Customer Service AI — MVP → Production → Multi-Agent
+          10 git commits, 9 scenario pathways, 3 model experiments
 
-STACK:    FastAPI + Ollama (SmolLM2 135M) + LangChain
-          Phoenix (tracing) + Prometheus (metrics) + structlog (logs)
-          pytest (testing) + GitHub Actions (CI/CD)
-          nginx (reverse proxy) + Docker (containerization)
+STACK:    FastAPI + Ollama + LangChain + nginx + Docker
+          Phoenix (traces) + Prometheus (metrics) + structlog (logs)
+          pytest (80+ tests) + GitHub Actions (5-job CI/CD)
+          Redis (session store, rate limit store — pluggable)
 
-SECURITY: normalize_text(): NFKC + confusable table + zero-width strip
+SECURITY: normalize_text(): NFKC + confusable table (Cyrillic/Greek)
+          + zero-width strip + whitespace collapse
           22 injection patterns (re.IGNORECASE)
-          API key auth + slowapi rate limiting (20 req/min)
-          nginx: rate limit + security headers + TLS placeholder
+          API key auth + slowapi 20 req/min + nginx rate limit
 
-AGENTS:   IntentClassifier (keywords + regex entities)
-          OrderAgent → get_order() tool
-          ReturnsAgent → check_return_eligibility() tool
-          ProductAgent → search_products() tool
-          EscalationAgent → always → ReviewQueue
-          GeneralAgent (fallback)
+ROUTING:  CompoundRouter — 3-phase cascade:
+            Phase 1: keyword classifier (≥85% confidence → single agent)
+            Phase 2: compound signal detection → parallel dispatch
+            Phase 3: LLM disambiguation (< 60% confidence)
+          SynthesizerAgent merges parallel results
 
-STATE:    InMemorySessionStore (async, Redis-ready, TTL 24h, max 10 turns)
-          InMemoryReviewQueue (async, admin endpoint)
+AGENTS:   OrderAgent → get_order() | ReturnsAgent → check_return_eligibility()
+          ProductAgent → search_products() | EscalationAgent → ReviewQueue
+          GeneralAgent (fallback) | SynthesizerAgent (compound merge)
 
-EVAL:     Blocking accuracy ≥ 95% (CI gate)
-          Cosine similarity ≥ 30% (CI gate)
-          LLM-as-judge ≥ 60% (Claude Haiku: acc/help/tone/complete)
-          Human review queue (5-10% production sampling)
+EVAL:     Layer 1: Blocking accuracy ≥ 95% (CI auto-gate)
+          Layer 2: Cosine similarity ≥ 30% (CI auto-gate)
+          Layer 3: LLM-as-judge (Claude Haiku) — acc/help/tone/complete
+          Layer 4: Human review queue (production 5-10% sampling)
 
-TESTS:    68 tests, 0 failing, 0 warnings (unit + integration)
-          tests/test_guardrails.py — 20 tests (guardrail functions)
-          tests/test_app.py — 17 tests (API endpoints, auth, rate limit)
-          tests/test_agents.py — 17 tests (agents, orchestrator, session)
-          tests/test_tools.py — 14 tests (tool functions, no Ollama)
+EXPERIMENTS:
+          SmolLM2 135M:   block=0.94, sim=0.41, judge=0.54 — dev only
+          Llama 3.2 3B:   block=0.97, sim=0.68, judge=0.82 — RECOMMENDED
+          Mistral 7B:     block=0.98, sim=0.76, judge=0.90 — premium tier
+          → Injection blocking = 1.00 on ALL models (guardrail is model-agnostic)
 
-GIT LOG:  feat(multi-agent): orchestrator, agents, tools, session, queue
-          feat(stage-6): nginx, multi-stage Docker, prod compose
-          feat(stage-5): evaluation quality gate, integration tests
-          feat(stage-4): GitHub Actions CI/CD pipeline
-          feat(stage-3): structlog, Prometheus metrics
-          feat(stage-2): auth, rate limiting, timeout, health endpoint
-          feat(stage-1): Unicode normalization, guardrail hardening
+DEMOS:    python demos/mock_demo.py          (no Ollama needed)
+          python demos/mock_demo.py --scenario F  (compound routing)
+          python experiments/compare_models.py    (model comparison)
+          python evaluation/run_llm_eval.py       (LLM judge scores)
 
-ARIZE:    Phoenix → same spans, add cloud endpoint
-          Arize managed → adds drift detection, model comparison, retention
-          LLM-as-judge → Arize has built-in evaluator templates
-          Human queue → Arize annotation workflow
+ARIZE:    Phoenix spans → same code, change OTLP endpoint to Arize cloud
+          Arize managed: drift detection, model versioning, A/B comparison
+          LLM-as-judge → Arize evaluator templates (same concept)
+          Human queue → Arize annotation workflow + active learning
 ```

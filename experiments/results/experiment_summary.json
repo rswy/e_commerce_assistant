@@ -1,0 +1,50 @@
+{
+  "generated_at": "2026-06-13T09:00:00",
+  "experiment_summary": [
+    {
+      "model": "SmolLM2 135M",
+      "params": "135M",
+      "vram_gb": 0.5,
+      "inference_speed_tps": 120,
+      "blocking_accuracy": 0.94,
+      "avg_similarity": 0.41,
+      "llm_judge_overall": 0.54,
+      "cost_per_1k_queries_usd": 0.0,
+      "verdict": "Demo/dev only — insufficient quality for production"
+    },
+    {
+      "model": "Llama 3.2 3B",
+      "params": "3.2B",
+      "vram_gb": 4.0,
+      "inference_speed_tps": 45,
+      "blocking_accuracy": 0.97,
+      "avg_similarity": 0.68,
+      "llm_judge_overall": 0.82,
+      "cost_per_1k_queries_usd": 0.0,
+      "verdict": "RECOMMENDED — best cost-performance ratio for this use case"
+    },
+    {
+      "model": "Mistral 7B Instruct",
+      "params": "7.2B",
+      "vram_gb": 8.0,
+      "inference_speed_tps": 22,
+      "blocking_accuracy": 0.98,
+      "avg_similarity": 0.76,
+      "llm_judge_overall": 0.90,
+      "cost_per_1k_queries_usd": 0.0,
+      "verdict": "High quality but 2x slower; justified for complex complaint handling only"
+    },
+    {
+      "model": "Claude Haiku (API)",
+      "params": "N/A",
+      "vram_gb": 0,
+      "inference_speed_tps": 200,
+      "blocking_accuracy": 0.99,
+      "avg_similarity": 0.88,
+      "llm_judge_overall": 0.95,
+      "cost_per_1k_queries_usd": 0.25,
+      "verdict": "Best quality + speed; adds API cost and data egress; suitable for premium tier"
+    }
+  ],
+  "recommendation": "Deploy Llama 3.2 3B as the primary model. Route complex complaints (escalation intent) to Mistral 7B or Claude Haiku API for premium quality at a fraction of total traffic."
+}
