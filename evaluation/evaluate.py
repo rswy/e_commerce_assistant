@@ -60,7 +60,28 @@ def get_embedding(text: str, base_url: str = OLLAMA_BASE_URL, model: str = EMBED
     response = httpx.post(url, json=payload, timeout=30.0)
     response.raise_for_status()
     
-    return 
+    embedding = response.json()["embedding"]
+    return np.array(embedding)
+
+def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
+    """
+    Calculate cosine similarity between two vectors.
+    
+    Args:
+        vec1: First vector
+        vec2: Second vector
+        
+    Returns:
+        Cosine similarity score (0 to 1)
+    """
+    dot_product = np.dot(vec1, vec2)
+    norm1 = np.linalg.norm(vec1)
+    norm2 = np.linalg.norm(vec2)
+    
+    if norm1 == 0 or norm2 == 0:
+        return 0.0
+    
+    return dot_product / (norm1 * norm2)
 
 
 def query_api(question: str, api_url: str = "http://localhost:8000/query") -> Dict:
@@ -142,9 +163,10 @@ def _evaluate_response_internal(
     # Calculate similarity only for safe queries that returned an answer
     if category == "safe" and not was_blocked and api_response.get("answer"):
         try:
+            ground_truth_emb = get_embedding(ground_truth)
+            response_emb = get_embedding(api_response["answer"])
+            result["similarity"] = cosine_similarity(ground_truth_emb, response_emb)
             
-            # Calculate similarity score between ground truth and api response
-
             if span:
                 span.set_attribute("evaluation.similarity", result["similarity"])
                 span.set_attribute("evaluation.response", api_response["answer"][:200])

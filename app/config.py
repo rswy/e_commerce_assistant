@@ -16,6 +16,7 @@ PHOENIX_ENDPOINT = os.getenv("PHOENIX_ENDPOINT", "http://localhost:6006")
 PHOENIX_ENABLED = os.getenv("PHOENIX_ENABLED", "false").lower() == "true"
 
 # System prompt for the customer service LLM
+# The candidate can improve the system prompt to increase evals accuracy
 SYSTEM_PROMPT = """You are a helpful customer service assistant for an e-commerce retail company. 
 You assist customers with:
 - Order status and tracking

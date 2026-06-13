@@ -59,6 +59,8 @@ python evaluation/evaluate.py --sample-size 20
 
 After fixing the bugs, discuss and optionally implement:
 
+- Possible implementation: System prompt improvement
+
 1. **Defense-in-depth strategies**:
    - How would you improve the pre-filtering?
    - What additional output moderation would you add?

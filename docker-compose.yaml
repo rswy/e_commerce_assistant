@@ -45,7 +45,7 @@ services:
     container_name: phoenix
     ports:
       - "6006:6006"  # Phoenix UI and OTLP HTTP
-      - "4317:4317"  # OTLP gRPC
+      - "4318:4317"  # OTLP gRPC
     environment:
       - PHOENIX_HOST=0.0.0.0
       - PHOENIX_PORT=6006
