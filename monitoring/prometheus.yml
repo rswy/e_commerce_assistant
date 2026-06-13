@@ -1,0 +1,64 @@
+# prometheus.yml — Prometheus scrape configuration for Customer Service AI
+#
+# Start Prometheus:
+#   docker compose up prometheus
+# Access UI:
+#   http://localhost:9090
+
+global:
+  scrape_interval:     15s   # How often to scrape targets
+  evaluation_interval: 15s   # How often to evaluate rules
+  scrape_timeout:      10s
+
+  # Attach these labels to all time series produced by this configuration.
+  external_labels:
+    environment: "production"
+    service:     "customer-service-ai"
+
+# ---------------------------------------------------------------------------
+# Alerting (optional — configure Alertmanager address here)
+# ---------------------------------------------------------------------------
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#             - alertmanager:9093
+
+# ---------------------------------------------------------------------------
+# Rule files (optional — add recording/alerting rules here)
+# ---------------------------------------------------------------------------
+# rule_files:
+#   - "alert_rules.yml"
+
+# ---------------------------------------------------------------------------
+# Scrape configurations
+# ---------------------------------------------------------------------------
+scrape_configs:
+
+  # -- Customer Service AI application metrics --
+  - job_name: "chatbot-api"
+    scrape_interval: 15s
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - app:8000
+        labels:
+          service: "chatbot-api"
+          env:     "production"
+
+  # -- Node Exporter (host-level metrics) --
+  # Uncomment and adjust the target when node_exporter is running.
+  # - job_name: "node-exporter"
+  #   scrape_interval: 30s
+  #   static_configs:
+  #     - targets:
+  #         - node-exporter:9100
+  #       labels:
+  #         service: "node-exporter"
+
+  # -- Prometheus self-monitoring --
+  - job_name: "prometheus"
+    scrape_interval: 30s
+    static_configs:
+      - targets:
+          - localhost:9090
