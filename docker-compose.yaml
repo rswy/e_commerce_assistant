@@ -1,5 +1,7 @@
 services:
+  # ---------------------------------------------------------------------------
   # Ollama service for LLM and embedding models
+  # ---------------------------------------------------------------------------
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
@@ -16,7 +18,9 @@ services:
     networks:
       - app_network
 
+  # ---------------------------------------------------------------------------
   # Model initialization service (runs once to pull models)
+  # ---------------------------------------------------------------------------
   ollama-init:
     image: ollama/ollama:latest
     container_name: ollama-init
@@ -39,13 +43,15 @@ services:
       - app_network
     restart: "no"
 
+  # ---------------------------------------------------------------------------
   # Phoenix observability platform
+  # ---------------------------------------------------------------------------
   phoenix:
     image: arizephoenix/phoenix:latest
     container_name: phoenix
     ports:
-      - "6006:6006"  # Phoenix UI and OTLP HTTP
-      - "4318:4317"  # OTLP gRPC
+      - "6006:6006"   # Phoenix UI and OTLP HTTP
+      - "4318:4317"   # OTLP gRPC
     environment:
       - PHOENIX_HOST=0.0.0.0
       - PHOENIX_PORT=6006
@@ -55,7 +61,9 @@ services:
       - app_network
     restart: unless-stopped
 
-  # Customer service application (optional - for testing)
+  # ---------------------------------------------------------------------------
+  # Customer service application
+  # ---------------------------------------------------------------------------
   app:
     build:
       context: .
@@ -69,6 +77,14 @@ services:
       - EMBEDDING_MODEL=nomic-embed-text
       - PHOENIX_ENDPOINT=http://phoenix:6006
       - PHOENIX_ENABLED=true
+      # Production hardening env vars
+      - METRICS_ENABLED=true
+      - LOG_LEVEL=INFO
+      - APP_ENV=production
+      - RATE_LIMIT_PER_MINUTE=20
+      - LLM_TIMEOUT_SECONDS=30
+      # API_KEY is intentionally unset here — set it via a .env file or secret
+      # manager in production:  API_KEY=<strong-random-secret>
     depends_on:
       ollama:
         condition: service_healthy
@@ -79,15 +95,64 @@ services:
     networks:
       - app_network
     profiles:
-      - full  # Only start with --profile full
+      - full   # Start with: docker compose --profile full up
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # nginx reverse proxy
+  # ---------------------------------------------------------------------------
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - "80:80"
+      # Uncomment when TLS is configured:
+      # - "443:443"
+    depends_on:
+      - app
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # Uncomment for Let's Encrypt certificates:
+      # - /etc/letsencrypt:/etc/letsencrypt:ro
+    networks:
+      - app_network
+    profiles:
+      - full
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Prometheus metrics collection
+  # ---------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+      - "--web.enable-lifecycle"
+    depends_on:
+      - app
+    networks:
+      - app_network
+    profiles:
+      - full
+    restart: unless-stopped
 
 volumes:
   ollama_data:
     driver: local
   phoenix_data:
     driver: local
+  prometheus_data:
+    driver: local
 
 networks:
   app_network:
     driver: bridge
-

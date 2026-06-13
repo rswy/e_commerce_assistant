@@ -1,0 +1,73 @@
+# docker-compose.prod.yaml — Production overrides
+#
+# Extends docker-compose.yaml with production-specific settings.
+# Apply with:
+#   docker compose -f docker-compose.yaml -f docker-compose.prod.yaml up -d
+#
+# This file assumes:
+#   - API_KEY is set via a .env file or secrets manager (NOT committed to git)
+#   - TLS certificates are in /etc/letsencrypt (managed by certbot/acme.sh)
+#   - A container registry is configured via $REGISTRY and $IMAGE_TAG variables
+
+services:
+  app:
+    image: ${REGISTRY:-ghcr.io/your-org}/customer-service-ai:${IMAGE_TAG:-latest}
+    # Remove build: block in production — use the pre-built registry image.
+    build: !reset null
+    restart: always
+    environment:
+      - APP_ENV=production
+      - LOG_LEVEL=INFO
+      - METRICS_ENABLED=true
+      - RATE_LIMIT_PER_MINUTE=20
+      - LLM_TIMEOUT_SECONDS=30
+      # Loaded from .env or external secrets — do not hardcode here.
+      - API_KEY=${API_KEY}
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - LLM_MODEL=${LLM_MODEL:-smollm2:135m}
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    # Remove port mapping in production — all traffic goes through nginx.
+    ports: !reset []
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  nginx:
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # Mount certificates when TLS is configured:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+
+  ollama:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 4G  # Adjust based on model size; 7B models need ~6-8GB.
+        reservations:
+          memory: 2G
+
+  prometheus:
+    restart: always
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+      - "--web.enable-lifecycle"
+      # Do not expose Prometheus UI on the public interface in production.
+      # Access via an SSH tunnel: ssh -L 9090:localhost:9090 user@host
+    ports: !reset []  # Remove public port mapping
