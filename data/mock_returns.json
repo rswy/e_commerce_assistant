@@ -1,0 +1,53 @@
+[
+  {
+    "return_id": "RMA-5001",
+    "order_id": "ORD-10003",
+    "customer_id": "CUST-002",
+    "status": "approved",
+    "initiated_date": "2026-05-20",
+    "reason": "Item not as described",
+    "refund_amount_usd": 34.99,
+    "refund_status": "processed"
+  },
+  {
+    "return_id": "RMA-5002",
+    "order_id": "ORD-10006",
+    "customer_id": "CUST-005",
+    "status": "completed",
+    "initiated_date": "2026-05-15",
+    "reason": "Defective product - speaker cut out intermittently",
+    "refund_amount_usd": 39.99,
+    "refund_status": "processed"
+  },
+  {
+    "return_id": "RMA-5003",
+    "order_id": "ORD-10009",
+    "customer_id": "CUST-007",
+    "status": "pending",
+    "initiated_date": "2026-05-28",
+    "reason": "Wrong item received",
+    "refund_amount_usd": 199.99,
+    "refund_status": "pending"
+  },
+  {
+    "return_id": "RMA-5004",
+    "order_id": "ORD-10013",
+    "customer_id": "CUST-010",
+    "status": "rejected",
+    "initiated_date": "2026-05-25",
+    "reason": "Changed mind",
+    "refund_amount_usd": 0.0,
+    "refund_status": "denied",
+    "rejection_reason": "Return window exceeded (55 days since order)"
+  },
+  {
+    "return_id": "RMA-5005",
+    "order_id": "ORD-10002",
+    "customer_id": "CUST-002",
+    "status": "in_transit",
+    "initiated_date": "2026-06-05",
+    "reason": "Size does not fit as expected",
+    "refund_amount_usd": 89.99,
+    "refund_status": "pending"
+  }
+]

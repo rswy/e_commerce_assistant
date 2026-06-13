@@ -1,0 +1,82 @@
+[
+  {
+    "customer_id": "CUST-001",
+    "name": "Sarah Chen",
+    "email": "sarah.chen@email.com",
+    "loyalty_tier": "gold",
+    "member_since": "2023-03-15",
+    "order_count": 12
+  },
+  {
+    "customer_id": "CUST-002",
+    "name": "Marcus Johnson",
+    "email": "marcus.johnson@email.com",
+    "loyalty_tier": "platinum",
+    "member_since": "2022-01-08",
+    "order_count": 31
+  },
+  {
+    "customer_id": "CUST-003",
+    "name": "Emily Rodriguez",
+    "email": "emily.r@email.com",
+    "loyalty_tier": "silver",
+    "member_since": "2024-06-22",
+    "order_count": 5
+  },
+  {
+    "customer_id": "CUST-004",
+    "name": "David Kim",
+    "email": "dkim@email.com",
+    "loyalty_tier": "bronze",
+    "member_since": "2025-02-14",
+    "order_count": 2
+  },
+  {
+    "customer_id": "CUST-005",
+    "name": "Jennifer Walsh",
+    "email": "jwalsh@email.com",
+    "loyalty_tier": "gold",
+    "member_since": "2023-09-30",
+    "order_count": 18
+  },
+  {
+    "customer_id": "CUST-006",
+    "name": "Robert Patel",
+    "email": "r.patel@email.com",
+    "loyalty_tier": "silver",
+    "member_since": "2024-01-11",
+    "order_count": 7
+  },
+  {
+    "customer_id": "CUST-007",
+    "name": "Amanda Torres",
+    "email": "amanda.torres@email.com",
+    "loyalty_tier": "platinum",
+    "member_since": "2021-07-04",
+    "order_count": 45
+  },
+  {
+    "customer_id": "CUST-008",
+    "name": "Michael Brown",
+    "email": "mbrown@email.com",
+    "loyalty_tier": "gold",
+    "member_since": "2022-11-19",
+    "order_count": 22
+  },
+  {
+    "customer_id": "CUST-009",
+    "name": "Lisa Nguyen",
+    "email": "lisa.nguyen@email.com",
+    "loyalty_tier": "silver",
+    "member_since": "2024-04-05",
+    "order_count": 6
+  },
+  {
+    "customer_id": "CUST-010",
+    "name": "James Wilson",
+    "email": "jwilson@email.com",
+    "loyalty_tier": "bronze",
+    "member_since": "2025-01-20",
+    "order_count": 3
+  }
+]

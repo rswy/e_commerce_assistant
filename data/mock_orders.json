@@ -1,0 +1,273 @@
+[
+  {
+    "order_id": "ORD-10001",
+    "customer_id": "CUST-001",
+    "status": "shipped",
+    "placed_date": "2026-06-01",
+    "est_delivery": "2026-06-08",
+    "tracking_number": "1Z999AA10123456784",
+    "items": [
+      {"name": "Wireless Headphones Pro", "product_id": "P001", "qty": 1, "unit_price_usd": 79.99}
+    ],
+    "total_usd": 79.99,
+    "shipping_address": "123 Main St, Austin, TX 78701"
+  },
+  {
+    "order_id": "ORD-10002",
+    "customer_id": "CUST-002",
+    "status": "delivered",
+    "placed_date": "2026-05-20",
+    "est_delivery": "2026-05-27",
+    "tracking_number": "1Z999AA10123456785",
+    "items": [
+      {"name": "Running Shoes - Size 10", "product_id": "P009", "qty": 1, "unit_price_usd": 89.99},
+      {"name": "Athletic Socks 3-Pack", "product_id": "P010", "qty": 2, "unit_price_usd": 14.99}
+    ],
+    "total_usd": 119.97,
+    "shipping_address": "456 Oak Ave, Portland, OR 97201"
+  },
+  {
+    "order_id": "ORD-10003",
+    "customer_id": "CUST-002",
+    "status": "delivered",
+    "placed_date": "2026-04-10",
+    "est_delivery": "2026-04-17",
+    "tracking_number": "1Z999AA10123456786",
+    "items": [
+      {"name": "Stainless Steel Water Bottle", "product_id": "P012", "qty": 1, "unit_price_usd": 34.99}
+    ],
+    "total_usd": 34.99,
+    "shipping_address": "456 Oak Ave, Portland, OR 97201"
+  },
+  {
+    "order_id": "ORD-10004",
+    "customer_id": "CUST-003",
+    "status": "processing",
+    "placed_date": "2026-06-10",
+    "est_delivery": "2026-06-18",
+    "tracking_number": null,
+    "items": [
+      {"name": "4K Smart TV 55-inch", "product_id": "P003", "qty": 1, "unit_price_usd": 549.99},
+      {"name": "HDMI Cable 6ft", "product_id": "P004", "qty": 2, "unit_price_usd": 12.99}
+    ],
+    "total_usd": 575.97,
+    "shipping_address": "789 Pine Rd, Chicago, IL 60601"
+  },
+  {
+    "order_id": "ORD-10005",
+    "customer_id": "CUST-004",
+    "status": "cancelled",
+    "placed_date": "2026-05-28",
+    "est_delivery": null,
+    "tracking_number": null,
+    "items": [
+      {"name": "Yoga Mat Premium", "product_id": "P014", "qty": 1, "unit_price_usd": 49.99}
+    ],
+    "total_usd": 49.99,
+    "shipping_address": "321 Elm St, Denver, CO 80201"
+  },
+  {
+    "order_id": "ORD-10006",
+    "customer_id": "CUST-005",
+    "status": "returned",
+    "placed_date": "2026-05-01",
+    "est_delivery": "2026-05-08",
+    "tracking_number": "1Z999AA10123456787",
+    "items": [
+      {"name": "Bluetooth Speaker Mini", "product_id": "P002", "qty": 1, "unit_price_usd": 39.99}
+    ],
+    "total_usd": 39.99,
+    "shipping_address": "654 Maple Dr, Seattle, WA 98101"
+  },
+  {
+    "order_id": "ORD-10007",
+    "customer_id": "CUST-001",
+    "status": "delivered",
+    "placed_date": "2026-06-05",
+    "est_delivery": "2026-06-12",
+    "tracking_number": "1Z999AA10123456788",
+    "items": [
+      {"name": "Coffee Maker Deluxe", "product_id": "P016", "qty": 1, "unit_price_usd": 89.99},
+      {"name": "Coffee Grinder", "product_id": "P017", "qty": 1, "unit_price_usd": 44.99}
+    ],
+    "total_usd": 134.98,
+    "shipping_address": "123 Main St, Austin, TX 78701"
+  },
+  {
+    "order_id": "ORD-10008",
+    "customer_id": "CUST-006",
+    "status": "shipped",
+    "placed_date": "2026-06-08",
+    "est_delivery": "2026-06-15",
+    "tracking_number": "1Z999AA10123456789",
+    "items": [
+      {"name": "Men's Casual T-Shirt - L", "product_id": "P007", "qty": 3, "unit_price_usd": 24.99},
+      {"name": "Men's Jogger Pants - L", "product_id": "P008", "qty": 1, "unit_price_usd": 44.99}
+    ],
+    "total_usd": 119.96,
+    "shipping_address": "987 Cedar Blvd, Miami, FL 33101"
+  },
+  {
+    "order_id": "ORD-10009",
+    "customer_id": "CUST-007",
+    "status": "delivered",
+    "placed_date": "2026-04-15",
+    "est_delivery": "2026-04-22",
+    "tracking_number": "1Z999AA10123456790",
+    "items": [
+      {"name": "Smart Watch Series 5", "product_id": "P005", "qty": 1, "unit_price_usd": 199.99}
+    ],
+    "total_usd": 199.99,
+    "shipping_address": "147 Birch Ln, Boston, MA 02101"
+  },
+  {
+    "order_id": "ORD-10010",
+    "customer_id": "CUST-008",
+    "status": "processing",
+    "placed_date": "2026-06-11",
+    "est_delivery": "2026-06-19",
+    "tracking_number": null,
+    "items": [
+      {"name": "Stand Mixer Pro", "product_id": "P018", "qty": 1, "unit_price_usd": 299.99}
+    ],
+    "total_usd": 299.99,
+    "shipping_address": "258 Walnut Ave, Phoenix, AZ 85001"
+  },
+  {
+    "order_id": "ORD-10011",
+    "customer_id": "CUST-003",
+    "status": "shipped",
+    "placed_date": "2026-06-03",
+    "est_delivery": "2026-06-10",
+    "tracking_number": "1Z999AA10123456791",
+    "items": [
+      {"name": "Laptop Stand Adjustable", "product_id": "P006", "qty": 1, "unit_price_usd": 35.99},
+      {"name": "Wireless Mouse", "product_id": "P019", "qty": 1, "unit_price_usd": 29.99},
+      {"name": "USB-C Hub 7-Port", "product_id": "P020", "qty": 1, "unit_price_usd": 49.99}
+    ],
+    "total_usd": 115.97,
+    "shipping_address": "789 Pine Rd, Chicago, IL 60601"
+  },
+  {
+    "order_id": "ORD-10012",
+    "customer_id": "CUST-009",
+    "status": "delivered",
+    "placed_date": "2026-05-10",
+    "est_delivery": "2026-05-17",
+    "tracking_number": "1Z999AA10123456792",
+    "items": [
+      {"name": "Yoga Mat Premium", "product_id": "P014", "qty": 1, "unit_price_usd": 49.99},
+      {"name": "Resistance Bands Set", "product_id": "P015", "qty": 1, "unit_price_usd": 24.99}
+    ],
+    "total_usd": 74.98,
+    "shipping_address": "369 Spruce St, Nashville, TN 37201"
+  },
+  {
+    "order_id": "ORD-10013",
+    "customer_id": "CUST-010",
+    "status": "delivered",
+    "placed_date": "2026-04-01",
+    "est_delivery": "2026-04-08",
+    "tracking_number": "1Z999AA10123456793",
+    "items": [
+      {"name": "Throw Pillow Set 2-Pack", "product_id": "P013", "qty": 2, "unit_price_usd": 29.99}
+    ],
+    "total_usd": 59.98,
+    "shipping_address": "741 Poplar Way, Atlanta, GA 30301"
+  },
+  {
+    "order_id": "ORD-10014",
+    "customer_id": "CUST-006",
+    "status": "delivered",
+    "placed_date": "2026-05-25",
+    "est_delivery": "2026-06-01",
+    "tracking_number": "1Z999AA10123456794",
+    "items": [
+      {"name": "Wireless Headphones Pro", "product_id": "P001", "qty": 1, "unit_price_usd": 79.99},
+      {"name": "Phone Case - iPhone 15", "product_id": "P011", "qty": 1, "unit_price_usd": 19.99}
+    ],
+    "total_usd": 99.98,
+    "shipping_address": "987 Cedar Blvd, Miami, FL 33101"
+  },
+  {
+    "order_id": "ORD-10015",
+    "customer_id": "CUST-004",
+    "status": "shipped",
+    "placed_date": "2026-06-07",
+    "est_delivery": "2026-06-14",
+    "tracking_number": "1Z999AA10123456795",
+    "items": [
+      {"name": "Air Fryer XL", "product_id": "P016", "qty": 1, "unit_price_usd": 119.99}
+    ],
+    "total_usd": 119.99,
+    "shipping_address": "321 Elm St, Denver, CO 80201"
+  },
+  {
+    "order_id": "ORD-10016",
+    "customer_id": "CUST-005",
+    "status": "delivered",
+    "placed_date": "2026-05-15",
+    "est_delivery": "2026-05-22",
+    "tracking_number": "1Z999AA10123456796",
+    "items": [
+      {"name": "Smart Watch Series 5", "product_id": "P005", "qty": 1, "unit_price_usd": 199.99},
+      {"name": "Watch Band Leather", "product_id": "P020", "qty": 1, "unit_price_usd": 29.99}
+    ],
+    "total_usd": 229.98,
+    "shipping_address": "654 Maple Dr, Seattle, WA 98101"
+  },
+  {
+    "order_id": "ORD-10017",
+    "customer_id": "CUST-007",
+    "status": "processing",
+    "placed_date": "2026-06-12",
+    "est_delivery": "2026-06-20",
+    "tracking_number": null,
+    "items": [
+      {"name": "4K Smart TV 55-inch", "product_id": "P003", "qty": 1, "unit_price_usd": 549.99}
+    ],
+    "total_usd": 549.99,
+    "shipping_address": "147 Birch Ln, Boston, MA 02101"
+  },
+  {
+    "order_id": "ORD-10018",
+    "customer_id": "CUST-008",
+    "status": "delivered",
+    "placed_date": "2026-04-20",
+    "est_delivery": "2026-04-27",
+    "tracking_number": "1Z999AA10123456797",
+    "items": [
+      {"name": "Running Shoes - Size 10", "product_id": "P009", "qty": 1, "unit_price_usd": 89.99}
+    ],
+    "total_usd": 89.99,
+    "shipping_address": "258 Walnut Ave, Phoenix, AZ 85001"
+  },
+  {
+    "order_id": "ORD-10019",
+    "customer_id": "CUST-009",
+    "status": "shipped",
+    "placed_date": "2026-06-09",
+    "est_delivery": "2026-06-16",
+    "tracking_number": "1Z999AA10123456798",
+    "items": [
+      {"name": "Bluetooth Speaker Mini", "product_id": "P002", "qty": 2, "unit_price_usd": 39.99},
+      {"name": "Stainless Steel Water Bottle", "product_id": "P012", "qty": 1, "unit_price_usd": 34.99}
+    ],
+    "total_usd": 114.97,
+    "shipping_address": "369 Spruce St, Nashville, TN 37201"
+  },
+  {
+    "order_id": "ORD-10020",
+    "customer_id": "CUST-010",
+    "status": "delivered",
+    "placed_date": "2026-05-05",
+    "est_delivery": "2026-05-12",
+    "tracking_number": "1Z999AA10123456799",
+    "items": [
+      {"name": "Coffee Maker Deluxe", "product_id": "P016", "qty": 1, "unit_price_usd": 89.99},
+      {"name": "Men's Casual T-Shirt - L", "product_id": "P007", "qty": 2, "unit_price_usd": 24.99}
+    ],
+    "total_usd": 139.97,
+    "shipping_address": "741 Poplar Way, Atlanta, GA 30301"
+  }
+]

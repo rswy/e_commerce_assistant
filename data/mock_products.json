@@ -1,0 +1,202 @@
+[
+  {
+    "product_id": "P001",
+    "name": "Wireless Headphones Pro",
+    "category": "electronics",
+    "price_usd": 79.99,
+    "in_stock": true,
+    "stock_count": 45,
+    "description": "Premium wireless headphones with 30-hour battery life and active noise cancellation.",
+    "specs": {"battery_hours": 30, "connectivity": "Bluetooth 5.0", "weight_g": 250}
+  },
+  {
+    "product_id": "P002",
+    "name": "Bluetooth Speaker Mini",
+    "category": "electronics",
+    "price_usd": 39.99,
+    "in_stock": true,
+    "stock_count": 72,
+    "description": "Compact waterproof Bluetooth speaker with 12-hour playtime and 360-degree sound.",
+    "specs": {"battery_hours": 12, "waterproof_rating": "IPX7", "weight_g": 300}
+  },
+  {
+    "product_id": "P003",
+    "name": "4K Smart TV 55-inch",
+    "category": "electronics",
+    "price_usd": 549.99,
+    "in_stock": true,
+    "stock_count": 12,
+    "description": "55-inch 4K UHD Smart TV with HDR10+, built-in streaming apps, and voice control.",
+    "specs": {"screen_size_inches": 55, "resolution": "3840x2160", "refresh_rate_hz": 120}
+  },
+  {
+    "product_id": "P004",
+    "name": "HDMI Cable 6ft",
+    "category": "electronics",
+    "price_usd": 12.99,
+    "in_stock": true,
+    "stock_count": 200,
+    "description": "High-speed HDMI 2.1 cable supporting 8K resolution and 48Gbps bandwidth.",
+    "specs": {"length_ft": 6, "version": "HDMI 2.1", "max_resolution": "8K"}
+  },
+  {
+    "product_id": "P005",
+    "name": "Smart Watch Series 5",
+    "category": "electronics",
+    "price_usd": 199.99,
+    "in_stock": true,
+    "stock_count": 28,
+    "description": "Advanced smartwatch with health monitoring, GPS, 5-day battery life, and swim-proof design.",
+    "specs": {"battery_days": 5, "water_resistance": "50m", "display": "AMOLED 1.4-inch"}
+  },
+  {
+    "product_id": "P006",
+    "name": "Laptop Stand Adjustable",
+    "category": "electronics",
+    "price_usd": 35.99,
+    "in_stock": true,
+    "stock_count": 95,
+    "description": "Ergonomic aluminum laptop stand with 6 height settings, compatible with laptops up to 17 inches.",
+    "specs": {"material": "aluminum", "max_laptop_inches": 17, "height_settings": 6}
+  },
+  {
+    "product_id": "P007",
+    "name": "Men's Casual T-Shirt",
+    "category": "clothing",
+    "price_usd": 24.99,
+    "in_stock": true,
+    "stock_count": 150,
+    "description": "Soft 100% organic cotton crewneck t-shirt available in multiple colors. Machine washable.",
+    "specs": {"material": "100% organic cotton", "fit": "regular", "sizes": ["S", "M", "L", "XL", "XXL"]}
+  },
+  {
+    "product_id": "P008",
+    "name": "Men's Jogger Pants",
+    "category": "clothing",
+    "price_usd": 44.99,
+    "in_stock": true,
+    "stock_count": 80,
+    "description": "Comfortable slim-fit jogger pants in soft fleece fabric with elastic waistband and zip pockets.",
+    "specs": {"material": "80% cotton 20% polyester", "fit": "slim", "sizes": ["S", "M", "L", "XL"]}
+  },
+  {
+    "product_id": "P009",
+    "name": "Running Shoes",
+    "category": "sports",
+    "price_usd": 89.99,
+    "in_stock": true,
+    "stock_count": 60,
+    "description": "Lightweight responsive running shoes with breathable mesh upper and cushioned midsole.",
+    "specs": {"drop_mm": 8, "weight_g": 280, "sizes": ["7", "8", "9", "10", "11", "12"]}
+  },
+  {
+    "product_id": "P010",
+    "name": "Athletic Socks 3-Pack",
+    "category": "sports",
+    "price_usd": 14.99,
+    "in_stock": true,
+    "stock_count": 300,
+    "description": "Moisture-wicking cushioned athletic socks with arch support, sold in packs of 3 pairs.",
+    "specs": {"material": "75% polyester 25% spandex", "pack_count": 3, "sizes": ["S/M", "L/XL"]}
+  },
+  {
+    "product_id": "P011",
+    "name": "Phone Case - iPhone 15",
+    "category": "electronics",
+    "price_usd": 19.99,
+    "in_stock": true,
+    "stock_count": 130,
+    "description": "Military-grade drop-protection clear case for iPhone 15 with MagSafe compatibility.",
+    "specs": {"compatibility": "iPhone 15", "drop_protection_ft": 10, "magsafe": true}
+  },
+  {
+    "product_id": "P012",
+    "name": "Stainless Steel Water Bottle",
+    "category": "sports",
+    "price_usd": 34.99,
+    "in_stock": true,
+    "stock_count": 110,
+    "description": "Insulated 32oz stainless steel water bottle keeping drinks cold 24 hours or hot 12 hours.",
+    "specs": {"capacity_oz": 32, "cold_hours": 24, "hot_hours": 12, "material": "18/8 stainless steel"}
+  },
+  {
+    "product_id": "P013",
+    "name": "Throw Pillow Set 2-Pack",
+    "category": "home",
+    "price_usd": 29.99,
+    "in_stock": true,
+    "stock_count": 85,
+    "description": "Decorative throw pillows in velvet fabric with removable covers. Set of 2, 18x18 inches.",
+    "specs": {"size_inches": "18x18", "material": "velvet", "pack_count": 2, "fill": "polyfill"}
+  },
+  {
+    "product_id": "P014",
+    "name": "Yoga Mat Premium",
+    "category": "sports",
+    "price_usd": 49.99,
+    "in_stock": true,
+    "stock_count": 55,
+    "description": "Non-slip 6mm thick TPE yoga mat with alignment lines and carrying strap. Eco-friendly material.",
+    "specs": {"thickness_mm": 6, "dimensions_cm": "183x61", "material": "TPE", "weight_kg": 1.2}
+  },
+  {
+    "product_id": "P015",
+    "name": "Resistance Bands Set",
+    "category": "sports",
+    "price_usd": 24.99,
+    "in_stock": true,
+    "stock_count": 140,
+    "description": "Set of 5 resistance bands ranging from light to extra heavy for full-body workouts.",
+    "specs": {"band_count": 5, "resistance_levels": ["light", "medium", "heavy", "x-heavy", "xx-heavy"], "material": "latex"}
+  },
+  {
+    "product_id": "P016",
+    "name": "Coffee Maker Deluxe",
+    "category": "home",
+    "price_usd": 89.99,
+    "in_stock": true,
+    "stock_count": 32,
+    "description": "12-cup programmable coffee maker with built-in grinder, thermal carafe, and auto-shutoff.",
+    "specs": {"capacity_cups": 12, "grinder": true, "carafe": "thermal", "programmable": true}
+  },
+  {
+    "product_id": "P017",
+    "name": "Coffee Grinder",
+    "category": "home",
+    "price_usd": 44.99,
+    "in_stock": false,
+    "stock_count": 0,
+    "description": "Burr coffee grinder with 18 grind settings for espresso, drip, French press, and cold brew.",
+    "specs": {"grind_settings": 18, "hopper_capacity_g": 250, "type": "burr"}
+  },
+  {
+    "product_id": "P018",
+    "name": "Stand Mixer Pro",
+    "category": "home",
+    "price_usd": 299.99,
+    "in_stock": true,
+    "stock_count": 18,
+    "description": "5.5-quart stand mixer with 10 speed settings, dough hook, flat beater, and whisk attachments.",
+    "specs": {"capacity_qt": 5.5, "speeds": 10, "wattage": 500, "attachments": ["dough hook", "flat beater", "whisk"]}
+  },
+  {
+    "product_id": "P019",
+    "name": "Wireless Mouse",
+    "category": "electronics",
+    "price_usd": 29.99,
+    "in_stock": true,
+    "stock_count": 98,
+    "description": "Ergonomic wireless mouse with silent clicks, 2.4GHz connectivity, and 12-month battery life.",
+    "specs": {"dpi": 1600, "battery_months": 12, "connectivity": "2.4GHz wireless", "buttons": 6}
+  },
+  {
+    "product_id": "P020",
+    "name": "USB-C Hub 7-Port",
+    "category": "electronics",
+    "price_usd": 49.99,
+    "in_stock": true,
+    "stock_count": 67,
+    "description": "7-in-1 USB-C hub with 4K HDMI, 100W PD charging, 3x USB-A, SD and microSD card readers.",
+    "specs": {"ports": 7, "hdmi_resolution": "4K@60Hz", "pd_wattage": 100, "usb_a_ports": 3}
+  }
+]
