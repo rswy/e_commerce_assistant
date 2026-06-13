@@ -18,12 +18,18 @@ dependencies = [
     "openinference-instrumentation-langchain>=0.1.0",
     "opentelemetry-sdk>=1.20.0",
     "opentelemetry-exporter-otlp>=1.20.0",
+    # Production hardening additions
+    "slowapi>=0.1.9",
+    "prometheus-client>=0.19.0",
+    "structlog>=24.0.0",
+    "tenacity>=8.2.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "ruff>=0.1.6",
     "mypy>=1.7.0",
+    "pytest-cov>=4.0.0",
 ]
 
 [build-system]
@@ -44,8 +50,14 @@ python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
 addopts = "-v --tb=short"
+markers = [
+    "integration: marks tests as integration tests requiring live services (deselect with -m 'not integration')",
+]
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
 
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["E501"]  # Line length handled by formatter
