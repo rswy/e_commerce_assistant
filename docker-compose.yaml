@@ -93,8 +93,8 @@ services:
       - "8000:8000"
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
-      - LLM_MODEL=smollm2:135m
-      - EMBEDDING_MODEL=nomic-embed-text
+      - LLM_MODEL=${LLM_MODEL:-smollm2:135m}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-nomic-embed-text}
       - PHOENIX_ENDPOINT=http://phoenix:6006
       - PHOENIX_ENABLED=true
       # Production hardening env vars
